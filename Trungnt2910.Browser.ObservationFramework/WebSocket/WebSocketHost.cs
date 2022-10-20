@@ -37,8 +37,9 @@ internal class WebSocketHost : WebSocketBehavior
 
                 await Task.Delay(_maxWaitTime);
 
-                if (_waitForTestHost.Task.IsCompleted)
+                if (_waitForTestHost.Task.IsCompleted && !(_runtimeProcess?.HasExited ?? false))
                 {
+                    _runtimeProcess!.Exited += (sender, args) => CleanTestHost();
                     break;
                 }
 
@@ -135,8 +136,6 @@ internal class WebSocketHost : WebSocketBehavior
             CleanTestHost();
             throw new HostExecutionException("Cannot launch Microsoft Edge.");
         }
-
-        _runtimeProcess.Exited += (sender, args) => CleanTestHost();
     }
 
     public static Task WaitForTestHost()
