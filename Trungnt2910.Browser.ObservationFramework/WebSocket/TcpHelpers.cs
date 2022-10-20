@@ -7,11 +7,19 @@ internal static class TcpHelpers
 {
     public static int FindUnusedPort()
     {
-        //get an empty port
-        var l = new TcpListener(IPAddress.Loopback, 0);
-        l.Start();
-        int port = ((IPEndPoint)l.LocalEndpoint).Port;
-        l.Stop();
+        int port = 0;
+        var socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
+        try
+        {
+            var localEP = new IPEndPoint(IPAddress.Any, 0);
+            socket.Bind(localEP);
+            localEP = (IPEndPoint)socket.LocalEndPoint!;
+            port = localEP.Port;
+        }
+        finally
+        {
+            socket.Close();
+        }
         return port;
     }
 }

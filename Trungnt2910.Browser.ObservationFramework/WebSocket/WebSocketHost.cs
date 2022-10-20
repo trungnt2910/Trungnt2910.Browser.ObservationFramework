@@ -10,25 +10,67 @@ namespace ObservationFramework.WebSocket;
 
 internal class WebSocketHost : WebSocketBehavior
 {
+    private static readonly TimeSpan _maxWaitTime = TimeSpan.FromSeconds(10);
+
     private static WebSocketServer _server;
     private static int _serverPort = WebSocketSettings.Port;
     private static TaskCompletionSource _waitForTestHost = new();
     private static Dictionary<Guid, TaskCompletionSource<MessageResult>> _pendingResults = new();
     private static WebSocketHost _client = new();
-    private static HttpFileServer _wasmPageServer;
+    private static HttpFileServer? _wasmPageServer;
     private static string _runtimeFolder;
     private static Process? _runtimeProcess;
 
     static WebSocketHost()
+    {
+        Console.CancelKeyPress += (sender, args) => CleanTestHost();
+        AppDomain.CurrentDomain.ProcessExit += (sender, args) => CleanTestHost();
+
+        _server = new();
+        _runtimeFolder = string.Empty;
+
+        Task.Run(async () =>
+        {
+            while (true)
+            {
+                InitializeTestHost();
+
+                await Task.Delay(_maxWaitTime);
+
+                if (_waitForTestHost.Task.IsCompleted)
+                {
+                    break;
+                }
+
+                // Someone might already be waiting through WaitForTestHost.
+                CleanTestHost(resetTask: false);
+            }
+        });
+    }
+
+    protected override void OnMessage(MessageEventArgs e)
+    {
+        var data = WebSocketMessageSerializer.Deserialize<MessageData>(e.RawData)!;
+
+        switch (data.Op)
+        {
+            case MessageOperation.Connect:
+                _client = this;
+                _waitForTestHost.SetResult();
+                break;
+            default:
+                _pendingResults.GetValueOrDefault(data.Id)?.SetResult((MessageResult)data);
+                break;
+        }
+    }
+
+    private static void InitializeTestHost()
     {
         _serverPort = TcpHelpers.FindUnusedPort();
         _server = new($"{WebSocketSettings.Scheme}{WebSocketSettings.Host}:{_serverPort}");
         _server.AddWebSocketService<WebSocketHost>($"/{WebSocketSettings.Path}");
         _server.Start();
         _server.WaitTime = WebSocketSettings.WaitTime;
-
-        Console.CancelKeyPress += (sender, args) => CleanTestHost();
-        AppDomain.CurrentDomain.ProcessExit += (sender, args) => CleanTestHost();
 
         _runtimeFolder = Path.Combine(Path.GetTempPath(), $"observationframework-{Guid.NewGuid()}");
         var hostFolder = Path.Combine(_runtimeFolder, "host");
@@ -51,14 +93,14 @@ internal class WebSocketHost : WebSocketBehavior
         File.WriteAllText(Path.Combine(edgeDataFolder, "FirstLaunchAfterInstallation"), "");
         File.WriteAllText(Path.Combine(edgeDataFolder, "Local State"), @"
         {
-           ""fre"":{
-              ""has_first_visible_browser_session_completed"":true,
-              ""has_user_committed_selection_to_import_during_fre"":false,
-              ""has_user_completed_fre"":false,
-              ""has_user_seen_fre"":true,
-              ""last_seen_fre"":""106.0.1370.47"",
-              ""oem_bookmarks_set"":true
-           }
+            ""fre"":{
+                ""has_first_visible_browser_session_completed"":true,
+                ""has_user_committed_selection_to_import_during_fre"":false,
+                ""has_user_completed_fre"":false,
+                ""has_user_seen_fre"":true,
+                ""last_seen_fre"":""106.0.1370.47"",
+                ""oem_bookmarks_set"":true
+            }
         }
         ");
 
@@ -75,7 +117,7 @@ internal class WebSocketHost : WebSocketBehavior
                 UseShellExecute = false,
             });
         }
-        
+
         // The workaround above may or may not work somehow, proceed to the second method.
         if (_runtimeProcess == null)
         {
@@ -93,22 +135,8 @@ internal class WebSocketHost : WebSocketBehavior
             CleanTestHost();
             throw new HostExecutionException("Cannot launch Microsoft Edge.");
         }
-    }
 
-    protected override void OnMessage(MessageEventArgs e)
-    {
-        var data = WebSocketMessageSerializer.Deserialize<MessageData>(e.RawData)!;
-
-        switch (data.Op)
-        {
-            case MessageOperation.Connect:
-                _client = this;
-                _waitForTestHost.SetResult();
-                break;
-            default:
-                _pendingResults.GetValueOrDefault(data.Id)?.SetResult((MessageResult)data);
-                break;
-        }
+        _runtimeProcess.Exited += (sender, args) => CleanTestHost();
     }
 
     public static Task WaitForTestHost()
@@ -251,13 +279,20 @@ internal class WebSocketHost : WebSocketBehavior
         _client.Send(WebSocketMessageSerializer.Serialize(data));
     }
 
-    public static void CleanTestHost()
+    public static void CleanTestHost(bool resetTask = true)
     {
         _client = new();
-        _waitForTestHost = new();
+        _server.Stop();
+        _wasmPageServer?.Stop();
         _pendingResults?.Clear();
         _runtimeProcess?.Kill(true);
         _runtimeProcess = null;
         Directory.Delete(_runtimeFolder, true);
+
+        if (resetTask)
+        {
+            _waitForTestHost.TrySetCanceled();
+            _waitForTestHost = new();
+        }
     }
 }
