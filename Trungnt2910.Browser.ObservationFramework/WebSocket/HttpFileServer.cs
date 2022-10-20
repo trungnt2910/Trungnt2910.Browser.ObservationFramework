@@ -135,7 +135,10 @@ class HttpFileServer
         _listener.Start();
         while (true)
         {
-            _cancellationTokenSource.Token.ThrowIfCancellationRequested();
+            if (_cancellationTokenSource.IsCancellationRequested)
+            {
+                break;
+            }
             try
             {
                 HttpListenerContext context = _listener.GetContext();
