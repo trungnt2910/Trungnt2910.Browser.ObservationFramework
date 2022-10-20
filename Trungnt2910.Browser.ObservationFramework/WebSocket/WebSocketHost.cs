@@ -58,12 +58,20 @@ internal class WebSocketHost : WebSocketBehavior
         }
         ");
 
-        _runtimeProcess = Process.Start(new ProcessStartInfo()
+        var process = Process.Start(new ProcessStartInfo()
         {
             FileName = "msedge",
             Arguments = $"--user-data-dir={edgeDataFolder} --auto-open-devtools-for-tabs --disable-extensions \"http://localhost:{_wasmPageServer.Port}/?{WebSocketSettings.WebSocketPortQueryString}={_serverPort}\"",
             UseShellExecute = true
-        })!;
+        });
+
+        if (process == null)
+        {
+            CleanTestHost();
+            throw new HostExecutionException("Cannot launch Microsoft Edge.");
+        }
+
+        _runtimeProcess = process;
     }
 
     protected override void OnMessage(MessageEventArgs e)
@@ -226,8 +234,8 @@ internal class WebSocketHost : WebSocketBehavior
     {
         _client = new();
         _waitForTestHost = new();
-        _pendingResults.Clear();
-        _runtimeProcess.Kill();
+        _pendingResults?.Clear();
+        _runtimeProcess?.Kill();
         Directory.Delete(_runtimeFolder, true);
     }
 }

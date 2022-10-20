@@ -8,4 +8,10 @@ class HostExecutionException : Exception
         : base($"{message.Name} from execution host: {message.Message}\n{message.StackTrace}", message.InnerException != null ? new HostExecutionException(message.InnerException) : null)
     {
     }
+
+    public HostExecutionException(string messasge)
+        : base(messasge)
+    {
+
+    }
 }
