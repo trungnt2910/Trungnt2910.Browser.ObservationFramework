@@ -6,5 +6,6 @@
     <_BrowserNetVersion Condition=" '$(_BrowserNetVersion)' == '' ">7.0</_BrowserNetVersion>
     <_BrowserTfm>net$(_BrowserNetVersion)-browser</_BrowserTfm>
     <_BrowserFullTfm>net$(_BrowserNetVersion)-browser$(_BrowserVersion)</_BrowserFullTfm>
+    <_ObservationFrameworkRootDirectory>$(MSBuildThisFileDirectory)</_ObservationFrameworkRootDirectory>
   </PropertyGroup>
 </Project>

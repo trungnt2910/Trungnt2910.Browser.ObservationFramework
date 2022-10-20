@@ -8,14 +8,46 @@
     <IsTestProject>false</IsTestProject>
   </PropertyGroup>
 
+  <PropertyGroup>
+    <PackageId>Trungnt2910.Browser.ObservationFramework</PackageId>
+    <Authors>trungnt2910</Authors>
+    <Title>Extensions for xUnit to run unit tests on Microsoft Edge.</Title>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageProjectUrl>https://github.com/trungnt2910/Trungnt2910.Browser.ObservationFramework</PackageProjectUrl>
+    <Description>
+Extensions for xUnit to run unit tests on Microsoft Edge.
+
+This package contains code and resources required for running xUnit tests on .NET WASM on Microsoft Edge.
+It is intended to be used for test projects targeting the $(_BrowserTfm) target framework.
+    </Description>
+    <Copyright>Copyright (C) 2022 Trung Nguyen</Copyright>
+    <PackageTags>xunit;browser;wasm;test;testing;testplatform;unittest</PackageTags>
+    <RepositoryUrl>https://github.com/trungnt2910/Trungnt2910.Browser.ObservationFramework</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+  </PropertyGroup>
+
   <ItemGroup>
-    <PackageReference Include="WebSocketSharp-netstandard" Version="1.0.1" />
-    <PackageReference Include="xunit" Version="2.4.2" />
+    <None Include="$(_ObservationFrameworkRootDirectory)\README.md" Pack="true" PackagePath="\" />
+    <None Include="$(_ObservationFrameworkRootDirectory)\LICENSE.md" Pack="true" PackagePath="\" />
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Trungnt2910.Browser.ObservationFramework.WebSocket.Shared\Trungnt2910.Browser.ObservationFramework.WebSocket.Shared.csproj" />
+    <PackageReference Include="WebSocketSharp-netstandard" Version="1.0.1" />
+    <PackageReference Include="xunit" Version="2.4.2" />
+    <PackageReference Include="Teronis.MSBuild.Packaging.ProjectBuildInPackage" Version="1.0.0">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
+    </PackageReference>
   </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Trungnt2910.Browser.ObservationFramework.WebSocket.Shared\Trungnt2910.Browser.ObservationFramework.WebSocket.Shared.csproj" PrivateAssets="all" />
+  </ItemGroup>
+
+  <Target Name="ObservationHostBuild" BeforeTargets="Build">
+    <MSBuild Projects="..\ObservationHost\ObservationHost.csproj" Targets="Build" Properties="Configuration=$(Configuration)" />
+  </Target>
 
   <ItemGroup>
     <_WasmHostFiles Include="..\ObservationHost\bin\$(Configuration)\$(TargetFramework)-browser\browser-wasm\AppBundle\**\*" />
