@@ -17,7 +17,7 @@ internal class WebSocketHost : WebSocketBehavior
     private static WebSocketHost _client = new();
     private static HttpFileServer _wasmPageServer;
     private static string _runtimeFolder;
-    private static Process _runtimeProcess;
+    private static Process? _runtimeProcess;
 
     static WebSocketHost()
     {
@@ -26,6 +26,10 @@ internal class WebSocketHost : WebSocketBehavior
         _server.AddWebSocketService<WebSocketHost>($"/{WebSocketSettings.Path}");
         _server.Start();
         _server.WaitTime = WebSocketSettings.WaitTime;
+
+        Console.CancelKeyPress += (sender, args) => CleanTestHost();
+        AppDomain.CurrentDomain.ProcessExit += (sender, args) => CleanTestHost();
+
         _runtimeFolder = Path.Combine(Path.GetTempPath(), $"observationframework-{Guid.NewGuid()}");
         var hostFolder = Path.Combine(_runtimeFolder, "host");
         var edgeDataFolder = Path.Combine(_runtimeFolder, "edgedata");
@@ -58,20 +62,37 @@ internal class WebSocketHost : WebSocketBehavior
         }
         ");
 
-        var process = Process.Start(new ProcessStartInfo()
-        {
-            FileName = "msedge",
-            Arguments = $"--user-data-dir={edgeDataFolder} --auto-open-devtools-for-tabs --disable-extensions \"http://localhost:{_wasmPageServer.Port}/?{WebSocketSettings.WebSocketPortQueryString}={_serverPort}\"",
-            UseShellExecute = true
-        });
+        var edgeParams = $"--user-data-dir={edgeDataFolder} --auto-open-devtools-for-tabs --disable-extensions \"http://localhost:{_wasmPageServer.Port}/?{WebSocketSettings.WebSocketPortQueryString}={_serverPort}\"";
 
-        if (process == null)
+        if (OperatingSystem.IsWindows())
+        {
+            // Workaround for Windows: Sometimes (especially during GitHub Actions runs) the Edge process
+            // just hangs there when started using `Process.Start`.
+            _runtimeProcess = Process.Start(new ProcessStartInfo()
+            {
+                FileName = "cmd.exe",
+                Arguments = $"/K \"\"C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe\" {edgeParams}",
+                UseShellExecute = false,
+            });
+        }
+        
+        // The workaround above may or may not work somehow, proceed to the second method.
+        if (_runtimeProcess == null)
+        {
+            _runtimeProcess = Process.Start(new ProcessStartInfo()
+            {
+                FileName = "msedge",
+                Arguments = $"{edgeParams}",
+                UseShellExecute = true
+            });
+        }
+
+        // Something's wrong here. Try to clean up and terminate the host.
+        if (_runtimeProcess == null)
         {
             CleanTestHost();
             throw new HostExecutionException("Cannot launch Microsoft Edge.");
         }
-
-        _runtimeProcess = process;
     }
 
     protected override void OnMessage(MessageEventArgs e)
@@ -235,7 +256,8 @@ internal class WebSocketHost : WebSocketBehavior
         _client = new();
         _waitForTestHost = new();
         _pendingResults?.Clear();
-        _runtimeProcess?.Kill();
+        _runtimeProcess?.Kill(true);
+        _runtimeProcess = null;
         Directory.Delete(_runtimeFolder, true);
     }
 }
