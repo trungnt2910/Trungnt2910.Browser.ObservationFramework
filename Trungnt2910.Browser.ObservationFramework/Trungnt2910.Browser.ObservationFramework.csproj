@@ -46,7 +46,7 @@ It is intended to be used for test projects targeting the $(_BrowserTfm) target 
   </ItemGroup>
 
   <Target Name="ObservationHostBuild" BeforeTargets="Build">
-    <MSBuild Projects="..\ObservationHost\ObservationHost.csproj" Targets="Build" Properties="Configuration=$(Configuration)" />
+    <MSBuild Projects="..\ObservationHost\ObservationHost.csproj" Targets="Restore;Build" RunEachTargetSeparately="true" Properties="Configuration=$(Configuration)" />
   </Target>
 
   <ItemGroup>
