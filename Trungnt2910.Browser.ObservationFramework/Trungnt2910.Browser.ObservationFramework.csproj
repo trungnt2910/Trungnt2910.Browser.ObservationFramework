@@ -1,0 +1,28 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net$(_BrowserNetVersion)</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <LangVersion>latest</LangVersion>
+    <IsTestProject>false</IsTestProject>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="WebSocketSharp-netstandard" Version="1.0.1" />
+    <PackageReference Include="xunit" Version="2.4.2" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Trungnt2910.Browser.ObservationFramework.WebSocket.Shared\Trungnt2910.Browser.ObservationFramework.WebSocket.Shared.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <_WasmHostFiles Include="..\ObservationHost\bin\$(Configuration)\$(TargetFramework)-browser\browser-wasm\AppBundle\**\*" />
+    <EmbeddedResource Include="@(_WasmHostFiles)">
+      <Link>WasmHost\%(RecursiveDir)%(Filename)%(Extension)</Link>
+      <LogicalName>%(RecursiveDir)%(Filename)%(Extension)</LogicalName>
+    </EmbeddedResource>
+  </ItemGroup>
+
+</Project>

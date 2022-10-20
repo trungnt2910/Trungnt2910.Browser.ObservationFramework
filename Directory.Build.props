@@ -1,0 +1,10 @@
+<Project>
+  <Import Condition="$([MSBuild]::GetPathOfFileAbove('Directory.Build.props', '$(MSBuildThisFileDirectory)../')) != ''"
+		  Project="$([MSBuild]::GetPathOfFileAbove('Directory.Build.props', '$(MSBuildThisFileDirectory)../'))" />
+  <PropertyGroup>
+    <_BrowserVersion Condition=" '$(_BrowserVersion)' == '' ">0.1</_BrowserVersion>
+    <_BrowserNetVersion Condition=" '$(_BrowserNetVersion)' == '' ">7.0</_BrowserNetVersion>
+    <_BrowserTfm>net$(_BrowserNetVersion)-browser</_BrowserTfm>
+    <_BrowserFullTfm>net$(_BrowserNetVersion)-browser$(_BrowserVersion)</_BrowserFullTfm>
+  </PropertyGroup>
+</Project>
