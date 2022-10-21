@@ -46,7 +46,11 @@ It is intended to be used for test projects targeting the $(_BrowserTfm) target 
     <ProjectReference Include="..\Trungnt2910.Browser.ObservationFramework.WebSocket.Shared\Trungnt2910.Browser.ObservationFramework.WebSocket.Shared.csproj" PrivateAssets="all" />
   </ItemGroup>
 
-  <Target Name="ObservationHostBuild" BeforeTargets="Build">
+  <ItemGroup>
+    <UpToDateCheckInput Include="..\ObservationHost\**\*" />
+  </ItemGroup>
+
+  <Target Name="ObservationHostBuild" BeforeTargets="CoreCompile">
     <MSBuild Projects="..\ObservationHost\ObservationHost.csproj" Targets="Restore;Build" RunEachTargetSeparately="true" Properties="Configuration=$(Configuration)" />
   </Target>
 
