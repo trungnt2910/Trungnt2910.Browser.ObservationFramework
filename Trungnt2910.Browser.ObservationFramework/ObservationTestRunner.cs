@@ -6,11 +6,14 @@ namespace Trungnt2910.Browser.ObservationFramework;
 
 public class ObservationTestRunner : TestRunner<ObservationTestCase>
 {
+    protected IRemoteHost RemoteHost { get; set; }
+
     readonly int testObjectHandle;
     readonly ExecutionTimer timer;
     
     public ObservationTestRunner(int testObjectHandle,
                                  ITest test,
+                                 IRemoteHost remoteHost,
                                  IMessageBus messageBus,
                                  ExecutionTimer timer,
                                  Type testClass,
@@ -21,11 +24,13 @@ public class ObservationTestRunner : TestRunner<ObservationTestCase>
     {
         this.testObjectHandle = testObjectHandle;
         this.timer = timer;
+
+        RemoteHost = remoteHost;
     }
 
     protected override async Task<Tuple<decimal, string>> InvokeTestAsync(ExceptionAggregator aggregator)
     {
-        var duration = await new ObservationTestInvoker(testObjectHandle, Test, MessageBus, TestClass, TestMethod, aggregator, CancellationTokenSource).RunAsync();
+        var duration = await new ObservationTestInvoker(testObjectHandle, Test, RemoteHost, MessageBus, TestClass, TestMethod, aggregator, CancellationTokenSource).RunAsync();
         return Tuple.Create(duration, string.Empty);
     }
 }

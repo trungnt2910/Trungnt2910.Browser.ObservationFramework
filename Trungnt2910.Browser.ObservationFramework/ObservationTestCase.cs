@@ -21,10 +21,11 @@ public class ObservationTestCase : TestMethodTestCase
     }
 
     public Task<RunSummary> RunAsync(int testObjectHandle,
+                                     IRemoteHost remoteHost,
                                      IMessageBus messageBus,
                                      ExceptionAggregator aggregator,
                                      CancellationTokenSource cancellationTokenSource)
     {
-        return new ObservationTestCaseRunner(testObjectHandle, this, DisplayName, messageBus, aggregator, cancellationTokenSource).RunAsync();
+        return new ObservationTestCaseRunner(testObjectHandle, this, DisplayName, remoteHost, messageBus, aggregator, cancellationTokenSource).RunAsync();
     }
 }

@@ -4,12 +4,15 @@ namespace Trungnt2910.Browser.ObservationFramework;
 
 public class ObservationTestCaseRunner : TestCaseRunner<ObservationTestCase>
 {
+    protected IRemoteHost RemoteHost { get; set; }
+
     readonly string displayName;
     readonly int testObjectHandle;
 
     public ObservationTestCaseRunner(int testObjectHandle,
                                      ObservationTestCase testCase,
                                      string displayName,
+                                     IRemoteHost remoteHost,
                                      IMessageBus messageBus,
                                      ExceptionAggregator aggregator,
                                      CancellationTokenSource cancellationTokenSource)
@@ -17,6 +20,8 @@ public class ObservationTestCaseRunner : TestCaseRunner<ObservationTestCase>
     {
         this.testObjectHandle = testObjectHandle;
         this.displayName = displayName;
+
+        RemoteHost = remoteHost;
     }
 
     protected override Task<RunSummary> RunTestAsync()
@@ -26,7 +31,7 @@ public class ObservationTestCaseRunner : TestCaseRunner<ObservationTestCase>
         var TestMethod = TestCase.TestMethod.Method.ToRuntimeMethod();
         var test = new ObservationTest(TestCase, displayName);
 
-        return new ObservationTestRunner(testObjectHandle, test, MessageBus, timer, TestClass, TestMethod, Aggregator, CancellationTokenSource).RunAsync();
+        return new ObservationTestRunner(testObjectHandle, test, RemoteHost, MessageBus, timer, TestClass, TestMethod, Aggregator, CancellationTokenSource).RunAsync();
     }
 }
 

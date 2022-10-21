@@ -1,6 +1,6 @@
-﻿using ObservationFramework.WebSocket.Messages;
+﻿using Trungnt2910.Browser.ObservationFramework.WebSocket.Messages;
 
-namespace ObservationFramework.WebSocket;
+namespace Trungnt2910.Browser.ObservationFramework.WebSocket;
 
 class HostExecutionException : Exception
 {

@@ -7,9 +7,12 @@ namespace Trungnt2910.Browser.ObservationFramework;
 
 public class ObservationTestCollectionRunner : TestCollectionRunner<ObservationTestCase>
 {
+    protected IRemoteHost RemoteHost { get; set; }
+
     readonly IMessageSink diagnosticMessageSink;
 
-    public ObservationTestCollectionRunner(ITestCollection testCollection,
+    public ObservationTestCollectionRunner(IRemoteHost remoteHost,
+                                           ITestCollection testCollection,
                                            IEnumerable<ObservationTestCase> testCases,
                                            IMessageSink diagnosticMessageSink,
                                            IMessageBus messageBus,
@@ -19,6 +22,7 @@ public class ObservationTestCollectionRunner : TestCollectionRunner<ObservationT
         : base(testCollection, testCases, messageBus, testCaseOrderer, aggregator, cancellationTokenSource)
     {
         this.diagnosticMessageSink = diagnosticMessageSink;
+        RemoteHost = remoteHost;
     }
 
     protected override async Task<RunSummary> RunTestClassAsync(ITestClass testClass,
@@ -28,14 +32,14 @@ public class ObservationTestCollectionRunner : TestCollectionRunner<ObservationT
         var timer = new ExecutionTimer();
         int testObjectHandle = 0;
 
-        await Aggregator.RunAsync(async () => testObjectHandle = await WebSocketHost.ConstructTestObjectOnHost(testClass.Class.ToRuntimeType()));
+        await Aggregator.RunAsync(async () => testObjectHandle = await RemoteHost.ConstructTestObject(testClass.Class.ToRuntimeType()));
 
         if (Aggregator.HasExceptions)
             return FailEntireClass(testCases, timer);
 
-        var result = await new ObservationTestClassRunner(testObjectHandle, testClass, @class, testCases, diagnosticMessageSink, MessageBus, TestCaseOrderer, new ExceptionAggregator(Aggregator), CancellationTokenSource).RunAsync();
+        var result = await new ObservationTestClassRunner(testObjectHandle, RemoteHost, testClass, @class, testCases, diagnosticMessageSink, MessageBus, TestCaseOrderer, new ExceptionAggregator(Aggregator), CancellationTokenSource).RunAsync();
 
-        await Aggregator.RunAsync(async () => await WebSocketHost.DisposeTestObjectOnHost(testObjectHandle));
+        await Aggregator.RunAsync(async () => await RemoteHost.DisposeTestObject(testObjectHandle));
 
         return result;
     }

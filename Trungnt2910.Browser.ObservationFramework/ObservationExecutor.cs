@@ -1,5 +1,5 @@
 ﻿using System.Reflection;
-using ObservationFramework.WebSocket;
+using Trungnt2910.Browser.ObservationFramework.WebSocket;
 using Xunit.Abstractions;
 using Xunit.Sdk;
 
@@ -21,15 +21,13 @@ public class ObservationExecutor : TestFrameworkExecutor<ObservationTestCase>
                                                IMessageSink executionMessageSink,
                                                ITestFrameworkExecutionOptions executionOptions)
     {
-        await WebSocketHost.WaitForTestHost();
-        await WebSocketHost.LoadAssemblyOnHost(Assembly.GetExecutingAssembly().Location);
-        await WebSocketHost.LoadAssemblyOnHost(AssemblyInfo.AssemblyPath);
+        using IRemoteHost remoteHost = await WebSocketRemoteHost.CreateAsync();
+        await remoteHost.LoadAssembly(Assembly.GetExecutingAssembly().Location);
+        await remoteHost.LoadAssembly(AssemblyInfo.AssemblyPath);
 
         var testAssembly = new TestAssembly(AssemblyInfo);
 
-        using (var assemblyRunner = new ObservationAssemblyRunner(testAssembly, testCases, DiagnosticMessageSink, executionMessageSink, executionOptions))
+        using (var assemblyRunner = new ObservationAssemblyRunner(remoteHost, testAssembly, testCases, DiagnosticMessageSink, executionMessageSink, executionOptions))
             await assemblyRunner.RunAsync();
-
-        WebSocketHost.CleanTestHost();
     }
 }

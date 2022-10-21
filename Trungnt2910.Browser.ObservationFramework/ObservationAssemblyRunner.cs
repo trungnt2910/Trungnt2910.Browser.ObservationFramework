@@ -1,11 +1,15 @@
-﻿using Xunit.Abstractions;
+﻿using Trungnt2910.Browser.ObservationFramework.WebSocket;
+using Xunit.Abstractions;
 using Xunit.Sdk;
 
 namespace Trungnt2910.Browser.ObservationFramework;
 
 public class ObservationAssemblyRunner : TestAssemblyRunner<ObservationTestCase>
 {
-    public ObservationAssemblyRunner(ITestAssembly testAssembly,
+    protected IRemoteHost RemoteHost { get; set; }
+
+    public ObservationAssemblyRunner(IRemoteHost remoteHost,
+                                     ITestAssembly testAssembly,
                                      IEnumerable<ObservationTestCase> testCases,
                                      IMessageSink diagnosticMessageSink,
                                      IMessageSink executionMessageSink,
@@ -13,6 +17,7 @@ public class ObservationAssemblyRunner : TestAssemblyRunner<ObservationTestCase>
         : base(testAssembly, testCases, diagnosticMessageSink, executionMessageSink, executionOptions)
     {
         TestCaseOrderer = new ObservationTestCaseOrderer();
+        RemoteHost = remoteHost;
     }
 
     protected override string GetTestFrameworkDisplayName()
@@ -30,6 +35,6 @@ public class ObservationAssemblyRunner : TestAssemblyRunner<ObservationTestCase>
                                                                IEnumerable<ObservationTestCase> testCases,
                                                                CancellationTokenSource cancellationTokenSource)
     {
-        return await new ObservationTestCollectionRunner(testCollection, testCases, DiagnosticMessageSink, messageBus, TestCaseOrderer, new ExceptionAggregator(Aggregator), cancellationTokenSource).RunAsync();
+        return await new ObservationTestCollectionRunner(RemoteHost, testCollection, testCases, DiagnosticMessageSink, messageBus, TestCaseOrderer, new ExceptionAggregator(Aggregator), cancellationTokenSource).RunAsync();
     }
 }

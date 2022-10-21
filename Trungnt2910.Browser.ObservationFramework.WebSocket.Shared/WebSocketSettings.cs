@@ -1,4 +1,4 @@
-﻿namespace ObservationFramework.WebSocket;
+﻿namespace Trungnt2910.Browser.ObservationFramework.WebSocket;
 
 static class WebSocketSettings
 {

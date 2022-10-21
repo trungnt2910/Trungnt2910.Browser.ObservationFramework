@@ -1,8 +1,8 @@
-﻿using ObservationFramework.WebSocket.Messages;
-using Newtonsoft.Json;
+﻿using Newtonsoft.Json;
 using System.Text;
+using Trungnt2910.Browser.ObservationFramework.WebSocket.Messages;
 
-namespace ObservationFramework.WebSocket;
+namespace Trungnt2910.Browser.ObservationFramework.WebSocket;
 
 internal static class WebSocketMessageSerializer
 {

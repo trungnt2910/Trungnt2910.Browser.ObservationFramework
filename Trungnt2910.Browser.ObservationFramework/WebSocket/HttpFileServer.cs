@@ -173,19 +173,27 @@ class HttpFileServer
         {
             try
             {
-                Stream input = new FileStream(filename, FileMode.Open);
+                using var inputStream = new FileStream(filename, FileMode.Open);
 
                 //Adding permanent http response headers
                 context.Response.ContentType = _mimeTypeMappings.TryGetValue(Path.GetExtension(filename), out var mime) ? mime : "application/octet-stream";
-                context.Response.ContentLength64 = input.Length;
+                context.Response.ContentLength64 = inputStream.Length;
                 context.Response.AddHeader("Date", DateTime.Now.ToString("r"));
                 context.Response.AddHeader("Last-Modified", File.GetLastWriteTime(filename).ToString("r"));
 
                 byte[] buffer = new byte[1024 * 16];
                 int nbytes;
-                while ((nbytes = input.Read(buffer, 0, buffer.Length)) > 0)
+                while ((nbytes = inputStream.Read(buffer, 0, buffer.Length)) > 0)
+                {
+                    if (_cancellationTokenSource.IsCancellationRequested)
+                    {
+                        inputStream.Close();
+                        context.Response.OutputStream.Close();
+                        return;
+                    }
                     context.Response.OutputStream.Write(buffer, 0, nbytes);
-                input.Close();
+                }
+                inputStream.Close();
 
                 context.Response.StatusCode = (int)HttpStatusCode.OK;
                 context.Response.OutputStream.Flush();

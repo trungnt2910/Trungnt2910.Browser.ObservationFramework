@@ -1,7 +1,7 @@
 ﻿using Microsoft.AspNetCore.WebUtilities;
 using Newtonsoft.Json;
-using ObservationFramework.WebSocket;
-using ObservationFramework.WebSocket.Messages;
+using Trungnt2910.Browser.ObservationFramework.WebSocket;
+using Trungnt2910.Browser.ObservationFramework.WebSocket.Messages;
 using ObservationHost;
 using System.Net.WebSockets;
 using System.Reflection;

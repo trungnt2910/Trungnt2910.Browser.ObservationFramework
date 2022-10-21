@@ -1,4 +1,4 @@
-﻿namespace ObservationFramework.WebSocket.Messages;
+﻿namespace Trungnt2910.Browser.ObservationFramework.WebSocket.Messages;
 
 class ExceptionMessage
 {

@@ -7,10 +7,13 @@ namespace Trungnt2910.Browser.ObservationFramework;
 
 public class ObservationTestInvoker : TestInvoker<ObservationTestCase>
 {
+    protected IRemoteHost RemoteHost { get; set; }
+
     private readonly int testObjectHandle;
 
     public ObservationTestInvoker(int testObjectHandle,
                                   ITest test,
+                                  IRemoteHost remoteHost,
                                   IMessageBus messageBus,
                                   Type testClass,
                                   MethodInfo testMethod,
@@ -19,6 +22,7 @@ public class ObservationTestInvoker : TestInvoker<ObservationTestCase>
         : base(test, messageBus, testClass, null, testMethod, null, aggregator, cancellationTokenSource)
     {
         this.testObjectHandle = testObjectHandle;
+        RemoteHost = remoteHost;
     }
 
     public new Task<decimal> RunAsync()
@@ -29,10 +33,9 @@ public class ObservationTestInvoker : TestInvoker<ObservationTestCase>
             {
                 if (!CancellationTokenSource.IsCancellationRequested)
                 {
-                    await WebSocketHost.WaitForTestHost();
                     if (!Aggregator.HasExceptions)
                         await Timer.AggregateAsync(async () =>
-                            await WebSocketHost.InvokeMethodOnHost(testObjectHandle, TestMethod));
+                            await RemoteHost.InvokeMethod(testObjectHandle, TestMethod));
                 }
             }
 
