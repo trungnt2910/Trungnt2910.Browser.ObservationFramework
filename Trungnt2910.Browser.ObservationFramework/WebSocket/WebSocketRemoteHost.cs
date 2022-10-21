@@ -6,7 +6,7 @@ namespace Trungnt2910.Browser.ObservationFramework.WebSocket;
 
 internal class WebSocketRemoteHost : IRemoteHost
 {
-    private static readonly TimeSpan _maxWaitTime = TimeSpan.FromSeconds(10);
+    private static readonly TimeSpan _maxWaitTime = TimeSpan.FromSeconds(30);
 
     private IHostProcess? _process;
     private WebSocketProcessServer? _server;
