@@ -1,11 +1,12 @@
 ﻿using Microsoft.AspNetCore.WebUtilities;
 using Newtonsoft.Json;
-using Trungnt2910.Browser.ObservationFramework.WebSocket;
-using Trungnt2910.Browser.ObservationFramework.WebSocket.Messages;
 using ObservationHost;
 using System.Net.WebSockets;
 using System.Reflection;
+using Trungnt2910.Browser;
 using Trungnt2910.Browser.Dom;
+using Trungnt2910.Browser.ObservationFramework.WebSocket;
+using Trungnt2910.Browser.ObservationFramework.WebSocket.Messages;
 using Xunit;
 
 const BindingFlags BindingFlagsAllInstance = BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic;
@@ -32,7 +33,7 @@ if (query.TryGetValue(WebSocketSettings.WebSocketPortQueryString, out var portQu
 
 string webSocketUrl = $"{WebSocketSettings.Scheme}{WebSocketSettings.Host}:{webSocketPort}/{WebSocketSettings.Path}";
 
-Console.WriteLine($"[ObservationHost] WebSocket connecting to {webSocketUrl}...");
+Ws_Log($"WebSocket connecting to {webSocketUrl}...");
 
 while (true)
 {
@@ -49,11 +50,14 @@ while (true)
     break;
 }
 
-Console.WriteLine($"[ObservationHost] WebSocket connected to {webSocketUrl}.");
+Ws_Log($"WebSocket connected to {webSocketUrl}.");
 
-Ws_Send(new MessageData() { Op = MessageOperation.Connect });
+Ws_Send(new ConnectData()
+{
+    RuntimeFrameworkEnvironment = $"{IntPtr.Size * 8}-bit .NET {Environment.Version}, running on browser: {JsObject.FromExpression("navigator.userAgent")}"
+});
 
-Console.WriteLine($"[ObservationHost] Sent initialization message to {webSocketUrl}.");
+Ws_Log($"Sent initialization message to {webSocketUrl}.");
 
 // Keep this type available on the host.
 Assert.True(true);
@@ -94,17 +98,33 @@ void Ws_OnClose()
 void Ws_Send(MessageData data)
 {
     var bytes = WebSocketMessageSerializer.Serialize(data);
-    _ = ws!.SendAsync(bytes, WebSocketMessageType.Binary, true, CancellationToken.None);
+    if (ws?.State == WebSocketState.Open)
+    {
+        _ = ws?.SendAsync(bytes, WebSocketMessageType.Binary, true, CancellationToken.None);
+    }
+}
+
+void Ws_Log(string message)
+{
+    Console.WriteLine($"[ObservationHost] {message}");
+    Ws_Send(new LogData()
+    {
+        Type = LogType.Diagnostic,
+        Message = message,
+    });
 }
 
 async void Ws_OnMessage(byte[] byteData)
 {
     var data = WebSocketMessageSerializer.Deserialize<MessageData>(byteData)!;
 
+#if DEBUG
+    // This message can be a bit verbose and annoying. Disable it in release builds.
     if (data.Op != MessageOperation.LoadAssembly)
     {
-        Console.WriteLine($"[ObservationHost] Received operation: {JsonConvert.SerializeObject(data)}");
+        Ws_Log($"Received operation: {JsonConvert.SerializeObject(data)}");
     }
+#endif
 
     switch (data.Op)
     {
@@ -153,7 +173,7 @@ LoadAssemblyResult LoadAssembly(LoadAssemblyData data)
     {
         var asm = AppDomain.CurrentDomain.Load(data.Assembly);
         additionalLoadedAssemblies.Add(asm);
-        Console.WriteLine($"[ObservationHost] Loaded {asm.FullName} from WebSocket connection.");
+        Ws_Log($"Loaded {asm.FullName} from WebSocket connection.");
     }
     catch (Exception ex)
     {
@@ -277,7 +297,6 @@ DisposeObjectResult DisposeObject(DisposeObjectData data)
 
     return result;
 }
-
 
 Assembly? AssemblyResolve(object? sender, ResolveEventArgs args)
 {

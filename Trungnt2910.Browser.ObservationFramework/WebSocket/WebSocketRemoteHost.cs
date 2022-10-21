@@ -1,6 +1,8 @@
 ﻿using System.Reflection;
 using System.Runtime.Loader;
 using Trungnt2910.Browser.ObservationFramework.WebSocket.Messages;
+using Xunit.Abstractions;
+using Xunit.Sdk;
 
 namespace Trungnt2910.Browser.ObservationFramework.WebSocket;
 
@@ -13,19 +15,30 @@ internal class WebSocketRemoteHost : IRemoteHost
     private WebSocketProcessConnection? _connection;
     private bool _disposedValue;
 
+    public string? FrameworkEnvironment => _connection?.ClientFrameworkEnvironment;
+
     private WebSocketRemoteHost()
     {
         Console.CancelKeyPress += (sender, args) => Dispose();
         AppDomain.CurrentDomain.ProcessExit += (sender, args) => Dispose();
     }
 
-    public static async Task<WebSocketRemoteHost> CreateAsync()
+    public static async Task<WebSocketRemoteHost> CreateAsync(IMessageSink diagnosticMessageSink, IMessageSink executionMessageSink)
     {
         while (true)
         {
             var currentHost = new WebSocketRemoteHost();
-            currentHost._server = new WebSocketProcessServer();
+            currentHost._server = new WebSocketProcessServer()
+            {
+                DiagnosticMessageSink = diagnosticMessageSink,
+                ExecutionMessageSink = executionMessageSink
+            };
             currentHost._process = new MicrosoftEdgeWasmHostProcess(currentHost._server.Port);
+
+            diagnosticMessageSink.OnMessage(new DiagnosticMessage()
+            {
+                Message = $"[{nameof(WebSocketRemoteHost)}]: Listening for remote processes on WebSocket port {currentHost._server.Port}..."
+            });
 
             var connectionTask = currentHost._server.WaitForNextProcessConnection();
 
@@ -33,13 +46,22 @@ internal class WebSocketRemoteHost : IRemoteHost
 
             if (!connectionTask.IsCompleted)
             {
+                diagnosticMessageSink.OnMessage(new DiagnosticMessage()
+                {
+                    Message = $"[{nameof(WebSocketRemoteHost)}]: The remote process did not respond after {_maxWaitTime.TotalMilliseconds}ms. Retrying..."
+                });
                 currentHost.Dispose();
                 continue;
             }
 
             currentHost._connection = connectionTask.Result;
-            currentHost._process.Exited += (sender, args) => 
+            currentHost._process.Exited += (sender, args) =>
                 currentHost.Dispose();
+
+            diagnosticMessageSink.OnMessage(new DiagnosticMessage()
+            {
+                Message = $"[{nameof(WebSocketRemoteHost)}]: Successfully connected to remote process ({currentHost.FrameworkEnvironment ?? "Unknown framework"})"
+            });
 
             return currentHost;
         }

@@ -1,5 +1,5 @@
-﻿using ObservationFramework.WebSocket;
-using WebSocketSharp.Server;
+﻿using WebSocketSharp.Server;
+using Xunit.Abstractions;
 
 namespace Trungnt2910.Browser.ObservationFramework.WebSocket;
 
@@ -12,6 +12,9 @@ class WebSocketProcessServer : IDisposable
     private Queue<WebSocketProcessConnection> _pendingConnections = new();
 
     public int Port => _serverPort;
+
+    public IMessageSink? DiagnosticMessageSink { get; set; }
+    public IMessageSink? ExecutionMessageSink { get; set; }
 
     public WebSocketProcessServer()
         : this(TcpHelpers.FindUnusedPort(), WebSocketSettings.Path)

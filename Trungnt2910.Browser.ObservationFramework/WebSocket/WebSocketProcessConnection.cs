@@ -1,6 +1,9 @@
 ﻿using Trungnt2910.Browser.ObservationFramework.WebSocket.Messages;
 using WebSocketSharp;
 using WebSocketSharp.Server;
+using Xunit.Abstractions;
+using Xunit.Sdk;
+using LogData = Trungnt2910.Browser.ObservationFramework.WebSocket.Messages.LogData;
 
 namespace Trungnt2910.Browser.ObservationFramework.WebSocket;
 
@@ -10,6 +13,8 @@ class WebSocketProcessConnection : WebSocketBehavior, IDisposable
     private Dictionary<Guid, TaskCompletionSource<MessageResult>> _pendingResults = new();
     private bool _disposedValue;
 
+    public string? ClientFrameworkEnvironment { get; private set; }
+
     protected override void OnMessage(MessageEventArgs e)
     {
         var data = WebSocketMessageSerializer.Deserialize<MessageData>(e.RawData)!;
@@ -17,7 +22,33 @@ class WebSocketProcessConnection : WebSocketBehavior, IDisposable
         switch (data.Op)
         {
             case MessageOperation.Connect:
+            {
+                var connectData = (ConnectData)data;
+                ClientFrameworkEnvironment = connectData.RuntimeFrameworkEnvironment;
                 _server?.NotifyProcessConnection(this);
+            }
+            break;
+            case MessageOperation.Log:
+            {
+                var logData = (LogData)data;
+                switch (logData.Type)
+                {
+                    case LogType.Execution:
+                        // TODO: Marshal execution information from the remote host.
+                        _server?.ExecutionMessageSink?.OnMessage(new DiagnosticMessage()
+                        {
+                            Message = $"[Remote Process] {logData.Message}"
+                        });
+                    break;
+                    case LogType.Diagnostic:
+                    default:
+                        _server?.DiagnosticMessageSink?.OnMessage(new DiagnosticMessage()
+                        {
+                            Message = $"[Remote Process] {logData.Message}"
+                        });
+                    break;
+                }
+            }
             break;
             default:
                 lock (_pendingResults)

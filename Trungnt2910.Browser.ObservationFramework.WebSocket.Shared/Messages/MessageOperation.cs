@@ -3,6 +3,7 @@
 enum MessageOperation
 {
     Connect,
+    Log,
     QueryAssemblyName,
     LoadAssembly,
     InvokeMethod,

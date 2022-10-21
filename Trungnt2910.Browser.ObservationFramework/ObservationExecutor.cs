@@ -21,7 +21,7 @@ public class ObservationExecutor : TestFrameworkExecutor<ObservationTestCase>
                                                IMessageSink executionMessageSink,
                                                ITestFrameworkExecutionOptions executionOptions)
     {
-        using IRemoteHost remoteHost = await WebSocketRemoteHost.CreateAsync();
+        using IRemoteHost remoteHost = await WebSocketRemoteHost.CreateAsync(DiagnosticMessageSink, executionMessageSink);
         await remoteHost.LoadAssembly(Assembly.GetExecutingAssembly().Location);
         await remoteHost.LoadAssembly(AssemblyInfo.AssemblyPath);
 

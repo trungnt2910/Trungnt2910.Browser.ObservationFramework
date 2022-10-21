@@ -1,5 +1,4 @@
-﻿using Trungnt2910.Browser.ObservationFramework.WebSocket;
-using Xunit.Abstractions;
+﻿using Xunit.Abstractions;
 using Xunit.Sdk;
 
 namespace Trungnt2910.Browser.ObservationFramework;
@@ -27,7 +26,7 @@ public class ObservationAssemblyRunner : TestAssemblyRunner<ObservationTestCase>
 
     protected override string GetTestFrameworkEnvironment()
     {
-        return string.Format("{0}-bit .NET {1}", IntPtr.Size * 8, Environment.Version);
+        return RemoteHost.FrameworkEnvironment ?? string.Format("{0}-bit .NET {1}", IntPtr.Size * 8, Environment.Version);
     }
 
     protected override async Task<RunSummary> RunTestCollectionAsync(IMessageBus messageBus,

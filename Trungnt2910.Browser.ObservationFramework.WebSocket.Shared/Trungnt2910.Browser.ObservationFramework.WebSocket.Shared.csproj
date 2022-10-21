@@ -4,7 +4,7 @@
     <TargetFramework>net$(_BrowserNetVersion)</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
-    <RootNamespace>ObservationFramework.WebSocket</RootNamespace>
+    <RootNamespace>Trungnt2910.Browser.ObservationFramework.WebSocket</RootNamespace>
   </PropertyGroup>
 
   <ItemGroup>
