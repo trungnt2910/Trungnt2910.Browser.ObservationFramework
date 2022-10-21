@@ -8,7 +8,8 @@ namespace Trungnt2910.Browser.ObservationFramework.WebSocket;
 
 internal class WebSocketRemoteHost : IRemoteHost
 {
-    private static readonly TimeSpan _maxWaitTime = TimeSpan.FromSeconds(10);
+    private static readonly TimeSpan _startupWaitTime = TimeSpan.FromSeconds(60);
+    private static readonly TimeSpan _retryWaitTime = TimeSpan.FromSeconds(20);
 
     private IHostProcess? _process;
     private WebSocketProcessServer? _server;
@@ -42,15 +43,18 @@ internal class WebSocketRemoteHost : IRemoteHost
 
             var connectionTask = currentHost._server.WaitForNextProcessConnection();
 
-            await Task.WhenAny(connectionTask, Task.Delay(_maxWaitTime));
+            await Task.WhenAny(connectionTask, Task.Delay(_startupWaitTime));
 
             if (!connectionTask.IsCompleted)
             {
                 diagnosticMessageSink.OnMessage(new DiagnosticMessage()
                 {
-                    Message = $"[{nameof(WebSocketRemoteHost)}]: The remote process did not respond after {_maxWaitTime.TotalMilliseconds}ms. Retrying..."
+                    Message = $"[{nameof(WebSocketRemoteHost)}]: The remote process did not respond after {_startupWaitTime.TotalMilliseconds}ms. Retrying..."
                 });
                 currentHost.Dispose();
+
+                await Task.Delay(_retryWaitTime);
+                
                 continue;
             }
 
