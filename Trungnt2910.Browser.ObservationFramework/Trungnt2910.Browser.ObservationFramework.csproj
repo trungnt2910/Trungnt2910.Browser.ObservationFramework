@@ -50,16 +50,23 @@ It is intended to be used for test projects targeting the $(_BrowserTfm) target 
     <UpToDateCheckInput Include="..\ObservationHost\**\*" />
   </ItemGroup>
 
-  <Target Name="ObservationHostBuild" BeforeTargets="CoreCompile">
-    <MSBuild Projects="..\ObservationHost\ObservationHost.csproj" Targets="Restore;Build" RunEachTargetSeparately="true" Properties="Configuration=$(Configuration)" />
-  </Target>
+  <Target Name="ObservationHostBuild" BeforeTargets="ResolveReferences">
+    <PropertyGroup>
+      <_ObservationHostMSBuildCommand>../ObservationHost/ObservationHost.csproj /t:Restore /t:Build /p:Configuration=$(Configuration)</_ObservationHostMSBuildCommand>
+    </PropertyGroup>
 
-  <ItemGroup>
-    <_WasmHostFiles Include="..\ObservationHost\bin\$(Configuration)\$(TargetFramework)-browser\browser-wasm\AppBundle\**\*" />
-    <EmbeddedResource Include="@(_WasmHostFiles)">
-      <Link>WasmHost\%(RecursiveDir)%(Filename)%(Extension)</Link>
-      <LogicalName>%(RecursiveDir)%(Filename)%(Extension)</LogicalName>
-    </EmbeddedResource>
-  </ItemGroup>
+    <!-- Can't use the MSBuild task as it might cause the output files to be locked by this process. -->
+    <Exec Condition="Exists('$(MSBuildBinPath)/../../dotnet.exe')" Command="&quot;$(MSBuildBinPath)/../../dotnet.exe&quot; msbuild $(_ObservationHostMSBuildCommand)" />
+    <Exec Condition="Exists('$(MSBuildBinPath)/../../dotnet')" Command="&quot;$(MSBuildBinPath)/../../dotnet&quot; msbuild $(_ObservationHostMSBuildCommand)" />
+    <Exec Condition="Exists('$(MSBuildBinPath)/MSBuild.exe')" Command="&quot;$(MSBuildBinPath)/MSBuild.exe&quot; $(_ObservationHostMSBuildCommand)" />
+
+    <ItemGroup>
+      <_WasmHostFiles Include="..\ObservationHost\bin\$(Configuration)\$(TargetFramework)-browser\browser-wasm\AppBundle\**\*" />
+      <EmbeddedResource Include="@(_WasmHostFiles)">
+        <Link>WasmHost\%(RecursiveDir)%(Filename)%(Extension)</Link>
+        <LogicalName>%(RecursiveDir)%(Filename)%(Extension)</LogicalName>
+      </EmbeddedResource>
+    </ItemGroup>
+  </Target>
 
 </Project>

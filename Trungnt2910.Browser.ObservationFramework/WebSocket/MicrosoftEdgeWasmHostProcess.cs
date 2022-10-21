@@ -20,6 +20,13 @@ class MicrosoftEdgeWasmHostProcess : IHostProcess
         var edgeDataFolder = Path.Combine(_runtimeFolder, "edgedata");
 
         var asm = Assembly.GetExecutingAssembly();
+        var resourceNames = asm.GetManifestResourceNames();
+
+        if (!resourceNames.Any())
+        {
+            throw new HostExecutionException("Cannot load embedded WebAssembly host. This probably means the test execution library is corrupted.");
+        }
+
         foreach (var resourceName in asm.GetManifestResourceNames())
         {
             using var resourceStream = asm.GetManifestResourceStream(resourceName)!;
