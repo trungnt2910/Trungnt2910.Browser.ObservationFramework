@@ -163,15 +163,11 @@ QueryAssemblyNameResult QueryAssemblyName(QueryAssemblyNameData data)
 
 LoadAssemblyResult LoadAssembly(LoadAssemblyData data)
 {
-    var result = new LoadAssemblyResult()
-    {
-        Op = data.Op,
-        Id = data.Id
-    };
+    var result = new LoadAssemblyResult(data);
 
     try
     {
-        var asm = AppDomain.CurrentDomain.Load(data.Assembly);
+        var asm = AppDomain.CurrentDomain.Load(data.Assembly, data.SymbolStore);
         additionalLoadedAssemblies.Add(asm);
         Ws_Log($"Loaded {asm.FullName} from WebSocket connection.");
     }

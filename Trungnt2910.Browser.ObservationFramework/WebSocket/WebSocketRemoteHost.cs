@@ -108,10 +108,14 @@ internal class WebSocketRemoteHost : IRemoteHost
             await LoadAssembly(refAssembly, context);
         }
 
+        var assemblyLocation = assembly.Location;
+        var symbolStoreLocation = Path.ChangeExtension(assemblyLocation, "pdb");
+
         var message = new LoadAssemblyData()
         {
             Op = MessageOperation.LoadAssembly,
             Assembly = File.ReadAllBytes(assembly.Location),
+            SymbolStore = File.Exists(symbolStoreLocation) ? File.ReadAllBytes(symbolStoreLocation) : null,
         };
 
         var result = await _connection!.Send<LoadAssemblyResult, LoadAssemblyData>(message);
