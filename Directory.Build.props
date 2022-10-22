@@ -7,5 +7,8 @@
     <_BrowserTfm>net$(_BrowserNetVersion)-browser</_BrowserTfm>
     <_BrowserFullTfm>net$(_BrowserNetVersion)-browser$(_BrowserVersion)</_BrowserFullTfm>
     <_ObservationFrameworkRootDirectory>$(MSBuildThisFileDirectory)</_ObservationFrameworkRootDirectory>
+
+    <RepositoryUrl Condition=" '$(RepositoryUrl)' == '' ">https://github.com/trungnt2910/Trungnt2910.Browser.ObservationFramework</RepositoryUrl>
+    <RepositoryType Condition=" '$(RepositoryType)' == '' ">git</RepositoryType>
   </PropertyGroup>
 </Project>

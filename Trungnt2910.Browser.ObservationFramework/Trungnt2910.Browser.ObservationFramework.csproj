@@ -22,8 +22,6 @@ It is intended to be used for test projects targeting the $(_BrowserTfm) target 
     </Description>
     <Copyright>Copyright (C) 2022 Trung Nguyen</Copyright>
     <PackageTags>xunit;browser;wasm;test;testing;testplatform;unittest</PackageTags>
-    <RepositoryUrl>https://github.com/trungnt2910/Trungnt2910.Browser.ObservationFramework</RepositoryUrl>
-    <RepositoryType>git</RepositoryType>
     <PackageReadmeFile>README.md</PackageReadmeFile>
   </PropertyGroup>
 
