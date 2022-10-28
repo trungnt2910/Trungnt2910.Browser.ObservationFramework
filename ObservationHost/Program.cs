@@ -8,6 +8,7 @@ using Trungnt2910.Browser.Dom;
 using Trungnt2910.Browser.ObservationFramework.WebSocket;
 using Trungnt2910.Browser.ObservationFramework.WebSocket.Messages;
 using Xunit;
+using Console = System.Console;
 
 const BindingFlags BindingFlagsAllInstance = BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic;
 
